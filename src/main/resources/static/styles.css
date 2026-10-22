@@ -1,0 +1,12 @@
+:root { color-scheme: light dark; font: 16px/1.5 system-ui, sans-serif; }
+body { margin: 0; background: #101820; color: #e9f0f5; }
+main { box-sizing: border-box; max-width: 900px; margin: 2rem auto; padding: 1.5rem; }
+header, section, footer { margin: 1rem 0; padding: 1rem; border: 1px solid #52616b; border-radius: 10px; }
+form { display: grid; gap: .75rem; padding: 1rem 0; border-bottom: 1px solid #35434b; }
+label { display: grid; gap: .3rem; }
+input, button { box-sizing: border-box; padding: .65rem; font: inherit; }
+button { width: fit-content; cursor: pointer; }
+.row { display: flex; align-items: center; justify-content: space-between; }
+#message { min-height: 1.5rem; color: #9de3ae; }
+footer { font-size: .9rem; }
+a { color: #9bcaff; }

@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Core Services demo</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <main>
+    <header><h1>Core Services</h1><p>A small demo for authentication, notifications, phone verification and payments.</p></header>
+    <p id="message" role="status" aria-live="polite"></p>
+    <section id="auth">
+      <h2>Account</h2>
+      <form id="register"><h3>Create account</h3><label>Email <input name="email" type="email" maxlength="254" required></label><label>Password <input name="password" type="password" minlength="12" maxlength="128" required></label><button>Create account</button></form>
+      <form id="login"><h3>Sign in</h3><label>Email <input name="email" type="email" maxlength="254" required></label><label>Password <input name="password" type="password" maxlength="128" required></label><button>Sign in</button></form>
+      <form id="reset-request"><h3>Forgot password</h3><label>Email <input name="email" type="email" maxlength="254" required></label><button>Request reset</button></form>
+      <form id="reset-confirm"><h3>Set a new password</h3><label>Reset token <input name="token" required></label><label>New password <input name="newPassword" type="password" minlength="12" maxlength="128" required></label><button>Reset password</button></form>
+    </section>
+    <section id="account" hidden>
+      <div class="row"><h2>Signed in</h2><button id="logout" type="button">Sign out</button></div>
+      <pre id="profile"></pre>
+      <h3>Phone verification</h3>
+      <form id="phone-start"><label>Phone number (E.164) <input name="phoneNumber" placeholder="+14155552671" pattern="\+[1-9][0-9]{7,14}" required></label><button>Send code</button></form>
+      <form id="phone-confirm"><label>Six-digit code <input name="code" inputmode="numeric" pattern="[0-9]{6}" required></label><button>Verify phone</button></form>
+      <h3>Notification preferences</h3><form id="preferences"><label><input type="checkbox" name="EMAIL"> Email</label><label><input type="checkbox" name="SMS"> SMS</label><label><input type="checkbox" name="WHATSAPP"> WhatsApp</label><button>Save preferences</button></form>
+      <h3>Payments</h3><button id="pay" type="button">Buy demo item</button><ul id="payments"></ul>
+      <h3>Recent notifications</h3><ul id="notifications"></ul>
+    </section>
+    <footer><a href="/v3/api-docs">OpenAPI JSON</a> · Swagger UI is available only in the local profile.</footer>
+  </main>
+  <script src="/app.js" defer></script>
+</body>
+</html>
