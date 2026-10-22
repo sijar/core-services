@@ -1,0 +1,43 @@
+# Build output
+.gradle/
+build/
+out/
+bin/
+.kotlin/
+!gradle/wrapper/gradle-wrapper.jar
+
+# Secrets and local configuration (never commit)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.jks
+*.keystore
+secrets/
+
+# IDEs
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+.project
+.classpath
+.settings/
+.factorypath
+.apt_generated
+.sts4-cache
+.springBeans
+nbproject/private/
+nbbuild/
+dist/
+nbdist/
+.nb-gradle/
+
+# OS and misc
+.DS_Store
+Thumbs.db
+*.log
+HELP.md
