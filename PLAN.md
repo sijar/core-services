@@ -2,15 +2,15 @@
 
 Implementation plan for `core-services`, derived from the project brief "Reusable Application Foundation: Main Points" (which includes the two-sprint "Reusable Authentication Service" build brief).
 
-**Status as of 2026-10-22: planning only.** The repository contains the Gradle wrapper, `.gitignore`, this plan and the README. There is no build script, application code, migration, Docker file or test yet. Nothing has been built, run or reviewed, and nothing here should be read as production-ready.
+**Status as of 2026-10-22: implementation added; unit, smoke and PostgreSQL integration tests pass.** The repository contains the modular Spring Boot application, migrations, local PostgreSQL setup, auth/notification/phone/payment APIs, a small demo UI and automated tests. This is not production-ready; see the README for known limitations and deployment requirements.
 
 | Phase | Scope | Status |
 |---|---|---|
-| 1 | Project skeleton, Docker Compose, PostgreSQL, Flyway V1-V2, configuration, health check | Not started (Gradle wrapper only) |
-| 2 | Authentication, minimal demo UI and their tests | Not started |
-| 3 | Notifications, phone OTP and their tests | Not started |
-| 4 | Stripe Checkout, webhooks and payment tests | Not started |
-| 5 | OpenAPI, completed README, CI, security checks | Not started (README and PLAN drafts exist) |
+| 1 | Project skeleton, Docker Compose, PostgreSQL, Flyway V1-V2, configuration, health check | Implemented; verification pending |
+| 2 | Authentication, minimal demo UI and their tests | Implemented; verification pending |
+| 3 | Notifications, phone OTP and their tests | Implemented; verification pending |
+| 4 | Stripe Checkout, webhooks and payment tests | Implemented; verification pending |
+| 5 | OpenAPI, completed README, CI, security checks | Implemented; verification pending |
 
 ## 1. Goal and scope
 
@@ -67,20 +67,20 @@ Versions were resolved on 2026-10-22 from Spring Initializr, the Spring Boot 4.1
 
 | Area | Choice |
 |---|---|
-| Language | Kotlin 2.3.21, JVM target 21 (local machine runs JDK 24) |
+| Language | Kotlin 2.3.21, JVM target 21 (Gradle launcher uses JDK 21) |
 | Framework | Spring Boot 4.1.1 (Spring Framework 7, Spring Security 7, Jackson 3) |
 | Build | Gradle wrapper 9.8.2, Kotlin DSL |
 | Database | PostgreSQL 17, Flyway (managed by Boot), Spring `JdbcClient` (no ORM) |
 | Password hashing | Argon2id via Spring Security, with BouncyCastle `bcprov-jdk18on` 1.86 (not managed by Boot) |
-| Rate limiting | Bucket4j `bucket4j_jdk17-core` 8.21.0 with Caffeine (managed by Boot) |
+| Rate limiting | Bounded Caffeine fixed-window limiter for auth; PostgreSQL counters/transaction locks for messaging |
 | Email | Spring Mail (SMTP) |
 | SMS / WhatsApp | HTTP providers behind interfaces (Twilio SMS; WhatsApp Business Platform Cloud API), called with Spring `RestClient` |
 | Payments | `stripe-java` 34.0.0 (Stripe Checkout, webhook signature verification) |
 | API docs | springdoc-openapi 3.1.1 (compatibility with Boot 4.1 to be verified) |
-| Tests | JUnit Jupiter 6.0.3 (managed by Boot 4.1.1), MockK 1.14.11, Testcontainers 2.0.5 with PostgreSQL |
+| Tests | JUnit Jupiter and Mockito (managed by Boot 4.1.1), Testcontainers 1.21.4 with PostgreSQL |
 | Local environment | Docker Compose |
 
-Deviation from the brief: it says JUnit 5; Spring Boot 4.1.1 manages JUnit Jupiter 6.0.3, so the managed version is used.
+Deviation from the brief: Spring Boot manages its JUnit version. The earlier plan's Testcontainers 2.0.5 coordinate does not exist in Maven Central; the build uses the available 1.21.4 release. The build, smoke checks and Docker-backed PostgreSQL integration tests pass.
 
 ## 4. Data model (planned)
 
@@ -142,12 +142,12 @@ All primary keys are UUIDs. All timestamps are `timestamptz` and handled as UTC.
 
 ### Phase 2: authentication and demo UI
 - Registration, login, logout, password reset request and confirm, `GET /api/me`, rate limiting, CSRF, session configuration, safe JSON error responses.
-- Until Phase 3, reset links go through a `PasswordResetSender` interface with a logging implementation enabled only in the `local` and `test` profiles.
+- Reset links go through a `PasswordResetSender` interface; local/test use an expiring in-memory mailbox rather than logging token contents.
 - Minimal static UI for register, login, logout, reset request and reset confirm.
 - **Done when:** core success and failure tests pass; reset tokens expire and cannot be reused; anonymous requests to `/api/me` are rejected.
 
 ### Phase 3: notifications and phone OTP
-- Migrations V3 and V4; provider interfaces with SMTP email, Twilio SMS and WhatsApp Cloud API implementations, plus logging providers for `local` and `test`.
+- Migrations V3 and V4; provider interfaces with SMTP email, Twilio SMS and WhatsApp Cloud API implementations, plus a local/test in-memory delivery mailbox.
 - Notification service: provider selection, consent and preference policy, rate limits, bounded retries, attempts, status and errors recorded.
 - Password-reset notifications move onto the notification service; OTP start and confirm endpoints; preference and status endpoints with ownership checks.
 - **Done when:** provider-mocked tests cover delivery, failure, retries, preferences, permissions and status; OTP expiry, wrong attempts, single use and rate limits are tested.
@@ -175,7 +175,7 @@ All primary keys are UUIDs. All timestamps are `timestamptz` and handled as UTC.
 | Database | Flyway migrations, constraints, transactions, rollback |
 | API security | Authentication, authorisation, invalid input, safe error responses, secret leakage |
 
-Providers are mocked or faked everywhere; the suite must not need live Stripe, SMS, email or WhatsApp credentials. Integration tests use Testcontainers PostgreSQL. Unit tests use MockK.
+Providers are mocked or faked everywhere; the suite must not need live Stripe, SMS, email or WhatsApp credentials. Integration tests use Testcontainers PostgreSQL. Mockito is available from the Spring Boot test starter; current tests include a no-database context/OpenAPI smoke test, rate-limiter and Stripe-signature unit tests, plus Docker-backed API integration scenarios.
 
 ## 9. Assumptions
 
@@ -191,9 +191,9 @@ Providers are mocked or faked everywhere; the suite must not need live Stripe, S
 
 ## 10. Risks
 
-- Spring Boot 4, Spring Security 7, Jackson 3 and Testcontainers 2 are new major versions; API differences are expected and will be resolved against the compiler and tests.
-- Testcontainers must work with the local Docker 29.9.2; to be verified in Phase 1.
-- springdoc 3.1.1 and MockK compatibility with Boot 4.1 are unverified.
+- Spring Boot 4, Spring Security 7 and Jackson 3 are new major versions; build, application-context smoke checks and Docker-backed migration/API integration tests pass.
+- Docker-backed PostgreSQL integration tests were executed successfully with Testcontainers.
+- springdoc 3.1.1 OpenAPI generation was exercised by the application-context smoke test.
 - Stripe, SMS, email and WhatsApp integrations can only be tested against fakes or local stubs without credentials. Live verification in test mode is a pre-production task.
 
 ## 11. Definition of done
@@ -216,9 +216,9 @@ Append the exact command and result for each verified step.
 
 | Date | Command | Result |
 |---|---|---|
-| 2026-10-22 | `java -version` | OpenJDK 24.0.1 |
-| 2026-10-22 | `gradle --version` | Gradle 8.14.4 (system install); the project wrapper targets 9.8.2 and has not been run |
-| 2026-10-22 | `docker --version`, `docker ps` | Docker 29.9.2; daemon reachable by the current user |
-| 2026-10-22 | `curl -sI https://repo.maven.apache.org/maven2/` | HTTP 200 (Maven Central reachable) |
-
-No build or test has been run yet.
+| 2026-10-22 | `./gradlew --version` | Gradle wrapper 9.8.2; Launcher JVM 21.0.12 |
+| 2026-10-22 | `./gradlew cleanTest test --console=plain` | Passed; all 8 tests passed, including four Testcontainers PostgreSQL API integration tests |
+| 2026-10-22 | `sh -n docker/postgres/init/01-create-application-roles.sh` | Passed |
+| 2026-10-22 | `node --check src/main/resources/static/app.js` | Passed |
+| 2026-10-22 | `git diff --check` | Passed |
+| 2026-10-22 | `docker version` / `sg docker -c './gradlew cleanTest test --console=plain'` | Docker 29.1.3 available; all 8 tests passed, including PostgreSQL-backed API integration |

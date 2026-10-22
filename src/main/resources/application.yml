@@ -1,0 +1,109 @@
+spring:
+  application:
+    name: core-services
+  profiles:
+    default: local
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/core_services}
+    username: ${DATABASE_USERNAME:core_services_app}
+    password: ${DATABASE_PASSWORD:}
+    hikari:
+      maximum-pool-size: ${DATABASE_POOL_SIZE:10}
+  flyway:
+    enabled: true
+    user: ${FLYWAY_USERNAME:core_services_migrator}
+    password: ${FLYWAY_PASSWORD:}
+  jackson:
+    default-property-inclusion: non_null
+  servlet:
+    multipart:
+      enabled: false
+  mail:
+    host: ${SMTP_HOST:localhost}
+    port: ${SMTP_PORT:587}
+    username: ${SMTP_USERNAME:}
+    password: ${SMTP_PASSWORD:}
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
+      mail.smtp.connectiontimeout: 5000
+      mail.smtp.timeout: 5000
+      mail.smtp.writetimeout: 5000
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: never
+server:
+  servlet:
+    session:
+      timeout: 30m
+      cookie:
+        http-only: true
+        secure: true
+        same-site: lax
+        name: CORESESSION
+  error:
+    include-message: never
+    include-stacktrace: never
+  forward-headers-strategy: framework
+  shutdown: graceful
+security:
+  password:
+    minimum-length: 12
+  rate-limit:
+    login-per-ip: 20
+    login-per-email: 5
+    registration-per-ip: 10
+    reset-per-ip: 10
+    window: 15m
+auth:
+  base-url: ${APP_BASE_URL:http://localhost:8080}
+  reset-token-ttl: 30m
+notifications:
+  retries: 3
+  request-timeout: 5s
+  rate-limit:
+    per-recipient-hour: 5
+    per-user-day: 20
+phone:
+  otp-hmac-secret: ${OTP_HMAC_SECRET:}
+  code-ttl: 10m
+  resend-cooldown: 60s
+  max-attempts: 5
+payments:
+  success-url: ${PAYMENT_SUCCESS_URL:http://localhost:8080/?payment=success}
+  cancel-url: ${PAYMENT_CANCEL_URL:http://localhost:8080/?payment=cancelled}
+  stripe:
+    secret-key: ${STRIPE_SECRET_KEY:}
+    webhook-secret: ${STRIPE_WEBHOOK_SECRET:}
+  catalog:
+    demo-item:
+      amount-minor: ${DEMO_ITEM_PRICE_MINOR:1000}
+      currency: ${DEMO_ITEM_CURRENCY:usd}
+      name: Demo item
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: false
+
+---
+spring:
+  config:
+    activate:
+      on-profile: local
+server:
+  address: 127.0.0.1
+  servlet:
+    session:
+      cookie:
+        secure: false
+springdoc:
+  swagger-ui:
+    enabled: true

@@ -1,0 +1,16 @@
+spring:
+  datasource:
+    url: jdbc:tc:postgresql:17:///core_services
+    username: test
+    password: test
+  flyway:
+    enabled: true
+    user: test
+    password: test
+server:
+  servlet:
+    session:
+      cookie:
+        secure: false
+phone:
+  otp-hmac-secret: test-only-secret-not-for-production
