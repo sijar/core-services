@@ -32,7 +32,7 @@ dependencies {
     implementation("com.github.ben-manes.caffeine:caffeine")
     implementation("org.bouncycastle:bcprov-jdk18on:1.86")
     implementation("com.stripe:stripe-java:34.0.0")
-    implementation("org.json:json:20250517")
+    implementation("org.json:json:20260814")
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.1.1")
     runtimeOnly("org.postgresql:postgresql")
 
